@@ -1,0 +1,193 @@
+{
+  "id": "abc-123-def",
+  "title": "Production Infrastructure Overview",
+  "description": "Key metrics for production environment monitoring",
+  "layout_type": "ordered",
+  "template_variables": [
+    {
+      "name": "env",
+      "prefix": "env",
+      "available_values": ["prod", "staging", "dev"],
+      "defaults": ["prod"]
+    },
+    {
+      "name": "host",
+      "prefix": "host",
+      "available_values": [],
+      "defaults": []
+    },
+    {
+      "name": "service",
+      "prefix": "service",
+      "available_values": ["web", "api", "worker", "db"],
+      "defaults": ["web"]
+    }
+  ],
+  "widgets": [
+    {
+      "id": 1,
+      "layout": { "x": 0, "y": 0, "width": 12, "height": 1 },
+      "definition": {
+        "type": "note",
+        "title": "",
+        "content": "## System Metrics\nMonitoring CPU, memory, and disk usage across all hosts."
+      }
+    },
+    {
+      "id": 2,
+      "layout": { "x": 0, "y": 1, "width": 8, "height": 4 },
+      "definition": {
+        "type": "timeseries",
+        "title": "CPU Usage by Host",
+        "show_legend": true,
+        "requests": [
+          {
+            "q": "avg:system.cpu.user{$env} by {host}",
+            "display_type": "line",
+            "style": {
+              "palette": "dog_classic",
+              "line_type": "solid",
+              "line_width": "normal"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "layout": { "x": 8, "y": 1, "width": 4, "height": 2 },
+      "definition": {
+        "type": "query_value",
+        "title": "Current CPU Usage",
+        "requests": [
+          {
+            "q": "avg:system.cpu.user{$env}",
+            "aggregator": "avg",
+            "conditional_formats": [
+              { "comparator": ">", "value": 80, "palette": "white_on_red" },
+              { "comparator": ">=", "value": 50, "palette": "white_on_yellow" },
+              { "comparator": "<", "value": 50, "palette": "white_on_green" }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "layout": { "x": 8, "y": 3, "width": 4, "height": 2 },
+      "definition": {
+        "type": "query_value",
+        "title": "Error Rate",
+        "requests": [
+          {
+            "q": "sum:http.errors{$env,$service}",
+            "aggregator": "sum",
+            "conditional_formats": [
+              { "comparator": ">", "value": 100, "palette": "white_on_red" },
+              { "comparator": ">=", "value": 10, "palette": "white_on_yellow" },
+              { "comparator": "<", "value": 10, "palette": "white_on_green" }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "layout": { "x": 0, "y": 5, "width": 6, "height": 4 },
+      "definition": {
+        "type": "toplist",
+        "title": "Top Hosts by Memory Usage",
+        "requests": [
+          {
+            "q": "top(avg:system.mem.used{$env} by {host}, 10, 'mean', 'desc')"
+          }
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "layout": { "x": 6, "y": 5, "width": 6, "height": 4 },
+      "definition": {
+        "type": "heatmap",
+        "title": "Request Latency Distribution",
+        "requests": [
+          {
+            "q": "avg:http.request.duration{$env,$service}"
+          }
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "layout": { "x": 0, "y": 9, "width": 12, "height": 4 },
+      "definition": {
+        "type": "query_table",
+        "title": "Service Performance Summary",
+        "requests": [
+          {
+            "q": "avg:http.request.duration{$env} by {service}"
+          },
+          {
+            "q": "sum:http.requests{$env} by {service}"
+          }
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "layout": { "x": 0, "y": 13, "width": 12, "height": 6 },
+      "definition": {
+        "type": "group",
+        "title": "Network Metrics",
+        "layout_type": "ordered",
+        "widgets": [
+          {
+            "id": 81,
+            "layout": { "x": 0, "y": 0, "width": 6, "height": 3 },
+            "definition": {
+              "type": "timeseries",
+              "title": "Network In (bytes/sec)",
+              "show_legend": true,
+              "requests": [
+                {
+                  "q": "avg:system.net.bytes_rcvd{$env,$host} by {host}",
+                  "display_type": "area"
+                }
+              ]
+            }
+          },
+          {
+            "id": 82,
+            "layout": { "x": 6, "y": 0, "width": 6, "height": 3 },
+            "definition": {
+              "type": "timeseries",
+              "title": "Network Out (bytes/sec)",
+              "show_legend": true,
+              "requests": [
+                {
+                  "q": "avg:system.net.bytes_sent{$env,$host} by {host}",
+                  "display_type": "area"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "layout": { "x": 0, "y": 19, "width": 12, "height": 4 },
+      "definition": {
+        "type": "timeseries",
+        "title": "HTTP Requests per Second",
+        "show_legend": true,
+        "requests": [
+          {
+            "q": "sum:http.requests{$env} by {service}",
+            "display_type": "bars"
+          }
+        ]
+      }
+    }
+  ]
+}
